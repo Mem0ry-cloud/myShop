@@ -30,12 +30,14 @@
 
     <p>
         <label asp-for="Product.Description"></label>
-        <input asp-for="Product.Description" class="form-control" />
+        <!--<input asp-for="Product.Description" class="form-control" />-->
+        <textarea asp-for="Product.Description" class="form-control summernote"></textarea>
+        <span asp-validation-for="Product.Description" class="text-danger"></span>
     </p>
 
     <p>
         <label asp-for="Product.Image"></label>
-        <input type="file" name="files" class="form-control" id="df" multiple />
+        <input type="file" name="files2022" class="form-control" id="uploadedImage" multiple />
     </p>
 
     <p>
@@ -70,16 +72,24 @@
 
 @section Scripts {
     @{
-        <partial name="_ValidationScriptsPartial" />
+    <partial name="_ValidationScriptsPartial" />
     }
 
     <script>
+        /*эдитор*/
+        $(document).ready(function () {
+            $('.summernote').summernote({
+                height: 200
+            });
+        });
+
+        /*алёрт*/
         function input() {
-            if (document.getElementById("df").value == "") {
+            if (document.getElementById("uploadedImage").value == "") {
                 Swal.fire(
-                    'Good job!',
-                    'You clicked the button!',
-                    'success'
+                    'Error!',
+                    'Загрузите картинку!',
+                    'error'
                 )
                 return false;
             }

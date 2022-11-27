@@ -7,12 +7,15 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using ShopM4.Data;
 using ShopM4.Models;
 using ShopM4.Models.ViewModels;
+using ShopM4.Controllers;
+using ShopM4.wwwroot.Product;
 
 namespace ShopM4.Controllers
 {
     public class ProductController : Controller
     {
         private ApplicationDbContext db;
+        private IWebHostEnvironment webhostEnvironment;
 
         public ProductController(ApplicationDbContext db)
         {
@@ -23,14 +26,14 @@ namespace ShopM4.Controllers
         public IActionResult Index()
         {
             IEnumerable<Product> objList = db.Product;
-
+            /*
             // получаем ссылки на сущности категорий
             foreach (var item in objList)
             {
                 // сопоставление таблицы категорий и таблицы product
                 item.Category = db.Category.FirstOrDefault(x => x.Id == item.CategoryId);
             }
-
+            */
             return View(objList);
         }
 
@@ -78,6 +81,33 @@ namespace ShopM4.Controllers
                 }
                 return View(productViewModel);
             }
+        }
+        //POST - CreateEdit
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult CreateEdit(IFormFile file, ProductViewModel productViewModel)
+        {
+            var files = HttpContext.Request.Form.Files;
+            string wwroot = webhostEnvironment.WebRootPath;
+            if (productViewModel.Product.Id == 0)
+            {
+                string upload = wwroot + PathManager.ImageProductPath;
+                string imageName = Guid.NewGuid().ToString();
+                string extension = Path.GetExtension(files[0].FileName);
+                string path = upload + imageName + extension;
+                using (var filestream = new FileStream(path, FileMode.Create))
+                {
+                    files[0].CopyTo(filestream);
+                }
+                productViewModel.Product.Image = imageName + extension;
+                db.Product.Add(productViewModel.Product);
+
+            }
+            else
+            {
+                //upadte
+            }
+            return View();
         }
     }
 }
