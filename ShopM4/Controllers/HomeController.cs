@@ -1,21 +1,41 @@
 ﻿using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using ShopM4.Data;
 using ShopM4.Models;
+using ShopM4.Models.ViewModels;
 
 namespace ShopM4.Controllers;
 
 public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;
+    private ApplicationDbContext db;
 
-    public HomeController(ILogger<HomeController> logger)
+    public HomeController(ILogger<HomeController> logger, ApplicationDbContext db)
     {
+        this.db = db;
         _logger = logger;
     }
-
+    public IActionResult Details(int id)
+    {
+        DetailsViewModel detailsViewModel = new DetailsViewModel()
+        {
+            IsInCart = false,
+            Product = db.Product.Include(x => x.Category).Include(x => x.MyModel).Where(x => x.Id == id).FirstOrDefault()
+        };
+        return View();
+    }
     public IActionResult Index()
     {
-        return View();
+        HomeViewModel homeViewModel = new HomeViewModel()
+        {
+            Products = db.Product,
+            Categories = db.Category
+        };
+
+
+        return View(homeViewModel);
     }
 
     public IActionResult Privacy()

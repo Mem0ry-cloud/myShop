@@ -14,6 +14,7 @@ namespace ShopM4.Controllers
             this.db = db;
         }
 
+        // GET: /<controller>/
         public IActionResult Index()
         {
             IEnumerable<MyModel> models = db.MyModel;

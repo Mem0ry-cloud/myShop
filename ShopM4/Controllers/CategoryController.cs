@@ -17,6 +17,7 @@ namespace ShopM4.Controllers
             this.db = db;
         }
 
+        // GET: /<controller>/
         public IActionResult Index()
         {
             IEnumerable<Category> categories = db.Category;
@@ -24,24 +25,28 @@ namespace ShopM4.Controllers
             return View(categories);
         }
 
+        // GET - Create
         public IActionResult Create()
         {
             return View();
         }
+
+        // POST - Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Create(Category category)
         {
-            if (ModelState.IsValid)  
+            if (ModelState.IsValid)  // проверка модели на валидность
             {
                 db.Category.Add(category);
                 db.SaveChanges();
-                return RedirectToAction("Index");
+                return RedirectToAction("Index");  // переход на страницу категорий
             }
 
             return View(category);
         }
 
+        // GET - Edit
         [HttpGet]
         public IActionResult Edit(int? id)
         {
@@ -61,15 +66,16 @@ namespace ShopM4.Controllers
         }
 
 
+        // POST - Edit
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Edit(Category category)
         {
-            if (ModelState.IsValid) 
+            if (ModelState.IsValid)  // проверка модели на валидность
             {
                 db.Category.Update(category);  // !!!
                 db.SaveChanges();
-                return RedirectToAction("Index"); 
+                return RedirectToAction("Index");  // переход на страницу категорий
             }
 
             return View(category);

@@ -36,8 +36,14 @@
     </p>
 
     <p>
+        <label asp-for="Product.ShortDescription"></label>
+        <input asp-for="Product.ShortDescription" class="form-control"/>
+        <span asp-validation-for="Product.ShortDescription" class="text-danger"></span>
+    </p>
+
+    <p>
         <label asp-for="Product.Image"></label>
-        <input type="file" name="files2022" class="form-control" id="uploadedImage" multiple />
+        <input type="file" name="files" class="form-control" id="uploadedImage" multiple />
     </p>
 
     <p>
@@ -50,6 +56,15 @@
         </select>
 
         <span asp-validation-for="Product.CategoryId" class="text-danger"></span>
+    </p>
+
+    <p>
+        <label asp-for="Product.MyModelId"></label>
+        <select asp-for="Product.MyModelId" asp-items="@Model.MyModelList"
+                class="form-control">
+            <option disabled selected>-- Выберите MyModel --</option>
+        </select>
+        <span asp-validation-for="Product.MyModelId" class="text-danger"></span>
     </p>
 
     <p>
@@ -70,30 +85,36 @@
     </p>
 </form>
 
+@if (Model.Product.Id != 0)
+{
+    <p>
+        <img src="@PathManager.ImageProductPath@Model.Product.Image" width="100" />
+    </p>
+}
+
+
 @section Scripts {
     @{
-    <partial name="_ValidationScriptsPartial" />
+        <partial name="_ValidationScriptsPartial" />
     }
 
-    <script>
-        /*эдитор*/
+    <script>/* editor */
         $(document).ready(function () {
             $('.summernote').summernote({
                 height: 200
             });
         });
 
-        /*алёрт*/
+        /* alert */
         function input() {
             if (document.getElementById("uploadedImage").value == "") {
                 Swal.fire(
                     'Error!',
-                    'Загрузите картинку!',
+                    'Пожалуйста, загрузите картинку!',
                     'error'
                 )
                 return false;
             }
             return true;
-        }
-    </script>
+        }</script>
 }

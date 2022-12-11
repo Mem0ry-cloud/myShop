@@ -1,39 +1,42 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using ShopM4.Data;
 using ShopM4.Models;
 using ShopM4.Models.ViewModels;
-using ShopM4.Controllers;
-using ShopM4.wwwroot.Product;
 
 namespace ShopM4.Controllers
 {
     public class ProductController : Controller
     {
         private ApplicationDbContext db;
-        private IWebHostEnvironment webhostEnvironment;
+        private IWebHostEnvironment webHostEnvironment;
 
-        public ProductController(ApplicationDbContext db)
+        public ProductController(ApplicationDbContext db, IWebHostEnvironment webHostEnvironment)
         {
             this.db = db;
+            this.webHostEnvironment = webHostEnvironment;
         }
 
         // GET INDEX
         public IActionResult Index()
         {
             IEnumerable<Product> objList = db.Product;
-            /*
+
             // получаем ссылки на сущности категорий
+            /*
             foreach (var item in objList)
             {
                 // сопоставление таблицы категорий и таблицы product
                 item.Category = db.Category.FirstOrDefault(x => x.Id == item.CategoryId);
             }
             */
+
             return View(objList);
         }
 
@@ -62,6 +65,12 @@ namespace ShopM4.Controllers
                 {
                     Text = x.Name,
                     Value = x.Id.ToString()
+                }),
+                MyModelList = db.MyModel.Select(x =>
+                new SelectListItem
+                {
+                    Text = x.Name,
+                    Value = x.Id.ToString()
                 })
             };
 
@@ -82,33 +91,131 @@ namespace ShopM4.Controllers
                 return View(productViewModel);
             }
         }
-        //POST - CreateEdit
+
+
+        // POST - CreateEdit
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult CreateEdit(IFormFile file, ProductViewModel productViewModel)
+        public IActionResult CreateEdit(ProductViewModel productViewModel)
         {
             var files = HttpContext.Request.Form.Files;
-            string wwroot = webhostEnvironment.WebRootPath;
+
+            string wwwRoot = webHostEnvironment.WebRootPath;
+
             if (productViewModel.Product.Id == 0)
             {
-                string upload = wwroot + PathManager.ImageProductPath;
+                // create
+                string upload = wwwRoot + PathManager.ImageProductPath;
                 string imageName = Guid.NewGuid().ToString();
-                string extension = Path.GetExtension(files[0].FileName);
-                string path = upload + imageName + extension;
-                using (var filestream = new FileStream(path, FileMode.Create))
-                {
-                    files[0].CopyTo(filestream);
-                }
-                productViewModel.Product.Image = imageName + extension;
-                db.Product.Add(productViewModel.Product);
 
+                string extension = Path.GetExtension(files[0].FileName);
+
+                string path = upload + imageName + extension;
+
+                // скопируем файл на сервер
+                using (var fileStream = new FileStream(path,FileMode.Create))
+                {
+                    files[0].CopyTo(fileStream);
+                }
+
+                productViewModel.Product.Image = imageName + extension;
+
+                db.Product.Add(productViewModel.Product);
             }
             else
             {
-                //upadte
+                // update
+                // AsNoTracking() - IMPORTANT!!!
+                var product = db.Product.AsNoTracking().FirstOrDefault(u => u.Id == productViewModel.Product.Id); // LINQ
+
+                if (files.Count > 0)  // юзер загружает другой файл
+                {
+                    string upload = wwwRoot + PathManager.ImageProductPath;
+                    string imageName = Guid.NewGuid().ToString();
+                    string extension = Path.GetExtension(files[0].FileName);
+                    string path = upload + imageName + extension;
+
+                    // delete old file
+                    var oldFile = upload + product.Image;
+
+                    if (System.IO.File.Exists(oldFile))
+                    {
+                        System.IO.File.Delete(oldFile);
+                    }
+
+                    // скопируем файл на сервер
+                    using (var fileStream = new FileStream(path, FileMode.Create))
+                    {
+                        files[0].CopyTo(fileStream);
+                    }
+
+                    productViewModel.Product.Image = imageName + extension;
+                }
+                else   // фотка не поменялась
+                {
+                    productViewModel.Product.Image = product.Image;  // оставляем имя прежним
+                }
+
+                db.Product.Update(productViewModel.Product);  
             }
-            return View();
+
+            db.SaveChanges();
+
+            return RedirectToAction("Index");
+
+            //return View();
         }
+
+
+        // GET - DELETE
+        public IActionResult Delete(int? id)
+        {
+            if (id == null || id == 0)
+            {
+                return NotFound();
+            }
+
+            Product product = db.Product.Find(id);
+
+            if (product == null)
+            {
+                return NotFound();
+            }
+
+            product.Category = db.Category.Find(product.CategoryId);
+
+            return View(product);
+        }
+
+        // POST
+        [HttpPost]
+        public IActionResult DeletePost(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            // delete from db
+            Product product = db.Product.Find(id);
+            db.Product.Remove(product);
+            db.SaveChanges();
+
+            // delete image from server
+            string upload = webHostEnvironment.WebRootPath + PathManager.ImageProductPath;
+
+            // получаем ссылку на нашу старую фотку
+            var oldFile = upload + product.Image;
+
+            if (System.IO.File.Exists(oldFile))
+            {
+                System.IO.File.Delete(oldFile);
+            }
+
+
+            return RedirectToAction("Index");
+        }
+
     }
 }
 

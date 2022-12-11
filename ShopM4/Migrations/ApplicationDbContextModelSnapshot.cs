@@ -80,6 +80,9 @@ namespace ShopM4.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("MyModelId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -87,9 +90,15 @@ namespace ShopM4.Migrations
                     b.Property<double>("Price")
                         .HasColumnType("float");
 
+                    b.Property<string>("ShortDescription")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
+
+                    b.HasIndex("MyModelId");
 
                     b.ToTable("Product");
                 });
@@ -102,7 +111,15 @@ namespace ShopM4.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("ShopM4.Models.MyModel", "MyModel")
+                        .WithMany()
+                        .HasForeignKey("MyModelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Category");
+
+                    b.Navigation("MyModel");
                 });
 #pragma warning restore 612, 618
         }
