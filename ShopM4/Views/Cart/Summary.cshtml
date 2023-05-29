@@ -1,0 +1,211 @@
+﻿@model ShopM4_Models.ViewModels.ProductUserViewModel
+
+<h1> Summary </h1>
+
+
+<form asp-action="SummaryPost" id="payment-form">
+
+
+
+    <!-- User -->
+    <p>
+        <label>Name</label>
+        <input type="text" asp-for="@Model.ApplicationUser.FullName" class="form-control" />
+        <span asp-validation-for="ApplicationUser.FullName" class="text-danger"></span>
+    </p>
+
+    <p>
+        <label>Phone</label>
+        <input type="text" asp-for="@Model.ApplicationUser.PhoneNumber" required class="form-control" />
+        <span asp-validation-for="ApplicationUser.PhoneNumber" class="text-danger"></span>
+    </p>
+
+    <p>
+        <label>Email</label>
+        <input type="text" asp-for="@Model.ApplicationUser.Email" required class="form-control" />
+        <span asp-validation-for="ApplicationUser.Email" class="text-danger"></span>
+    </p>
+
+    <!-- ADMIN for user -->
+    @if (User.IsInRole(ShopM4_Utility.PathManager.AdminRole))
+    {
+        <p>
+            <label>City</label>
+            <input type="text" asp-for="@Model.ApplicationUser.City" class="form-control" />
+            <span asp-validation-for="ApplicationUser.City" class="text-danger"></span>
+        </p>
+
+        <p>
+            <label>Street</label>
+            <input type="text" asp-for="@Model.ApplicationUser.Street" class="form-control" />
+            <span asp-validation-for="ApplicationUser.Street" class="text-danger"></span>
+        </p>
+
+        <p>
+            <label>House</label>
+            <input type="text" asp-for="@Model.ApplicationUser.House" class="form-control" />
+            <span asp-validation-for="ApplicationUser.House" class="text-danger"></span>
+        </p>
+
+        <p>
+            <label>Apartment</label>
+            <input type="text" asp-for="@Model.ApplicationUser.Apartment" class="form-control" />
+            <span asp-validation-for="ApplicationUser.Apartment" class="text-danger"></span>
+        </p>
+
+        <p>
+            <label>PostalCode</label>
+            <input type="text" asp-for="@Model.ApplicationUser.PostalCode" class="form-control" />
+            <span asp-validation-for="ApplicationUser.PostalCode" class="text-danger"></span>
+        </p>
+    }
+
+
+    <!-- Products -->
+
+    @{
+        double totalPriceProducts = 0;
+    }
+
+    @for (int i = 0; i < Model.ProductList.Count(); i++)
+    {
+        <input type="hidden" asp-for="@Model.ProductList[i].Id" />
+
+        <input type="hidden" asp-for="@Model.ProductList[i].Price" />
+        <input type="hidden" asp-for="@Model.ProductList[i].TempCount" />
+
+        <p>
+            Product Name: @Model.ProductList[i].Name
+        </p>
+
+        @if (User.IsInRole(ShopM4_Utility.PathManager.AdminRole))
+        {
+            <p>
+                Count: @Model.ProductList[i].TempCount
+            </p>
+
+            <p>
+                Total Price: @(Model.ProductList[i].TempCount * Model.ProductList[i].Price)
+            </p>
+
+            totalPriceProducts += Model.ProductList[i].TempCount * Model.ProductList[i].Price;
+        }
+        else
+        {
+            <p>
+                Price per thing: @Model.ProductList[i].Price
+            </p>
+        }
+    }
+
+    @if (User.IsInRole(ShopM4_Utility.PathManager.AdminRole))
+    {
+        <h3>
+            Total Price Products: @totalPriceProducts
+        </h3>
+    }
+
+    @if (User.IsInRole(ShopM4_Utility.PathManager.AdminRole))
+    {
+        <div class="checkout container">
+            <div id="dropin-container"></div>
+            <input id="nonce" name="payment_method_nonce" type="hidden" />
+        </div>
+    }
+
+
+    @if (User.IsInRole(ShopM4_Utility.PathManager.AdminRole))
+    {
+        <p>
+            <button type="submit" class="btn btn-primary form-control" onclick="return funcValidation()">
+                Submit Order
+            </button>
+        </p>
+    }
+    else
+    {
+        <p>
+            <button type="submit" class="btn btn-success form-control" onclick="return funcValidation()">
+                Submit Query
+            </button>
+        </p>
+    }
+
+
+</form>
+
+@section Scripts {
+    @{
+        <partial name="_ValidationScriptsPartial" />
+
+        <script src="https://js.braintreegateway.com/web/dropin/1.34.0/js/dropin.min.js"></script>
+
+        <script>
+
+            var tokenClient = "@ViewBag.TokenClient";
+
+            var form = document.querySelector('#payment-form');
+
+            // подключение для braintree
+            braintree.dropin.create({
+                authorization: tokenClient,
+                container: '#dropin-container'
+            },
+
+            // первый параметр для ошибки, второй - экземпляр подключения
+            function (error, dropinInstance) {
+                // тут происходит обработка события
+                form.addEventListener('submit', function () {
+                    // блочим автоматическую передачу формы
+                    event.preventDefault();
+
+                    // добавить nonce в форму и затем отправить ее
+                    dropinInstance.requestPaymentMethod(function (err, payload) {
+                        // отправить nonce на наш сервер
+                        document.querySelector('#nonce').value = payload.nonce;
+
+                        form.submit();
+                    })
+                })
+                });
+
+
+            // функция валидации
+            function funcValidation() {
+                var full_name = document.getElementById("ApplicationUser_FullName").value;
+                var phone = document.getElementById("ApplicationUser_PhoneNumber").value;
+                var email = document.getElementById("ApplicationUser_Email").value;
+
+                if (full_name == '') {
+                    Swal.fire(
+                        'Error!',
+                        'Пожалуйста, введите имя!',
+                        'error'
+                    )
+                    return false;
+                }
+
+                if (phone == '') {
+                    Swal.fire(
+                        'Error!',
+                        'Пожалуйста, введите номер телефона!',
+                        'error'
+                    )
+                    return false;
+                }
+
+                if (email == '') {
+                    Swal.fire(
+                        'Error!',
+                        'Пожалуйста, введите Email!',
+                        'error'
+                    )
+                    return false;
+                }
+
+                return true;
+            }
+
+        </script>
+    }
+}

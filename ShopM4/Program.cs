@@ -1,6 +1,12 @@
-using ShopM4.Data;
+using ShopM4_DataMigrations.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
+using ShopM4_Utility;
+using ShopM4_Utility.BrainTree;
+
+using ShopM4_DataMigrations.Repository;
+using ShopM4_DataMigrations.Repository.IRepository;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +25,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
 
+//builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
+//    .AddEntityFrameworkStores<ApplicationDbContext>();
+
 // для автоматического создания таблиц в бд
 //builder.Services.AddDefaultIdentity<IdentityUser>().
 //    AddEntityFrameworkStores<ApplicationDbContext>();
@@ -26,6 +35,33 @@ builder.Services.AddDbContext<ApplicationDbContext>(
 builder.Services.AddIdentity<IdentityUser, IdentityRole>().
     AddDefaultUI().AddDefaultTokenProviders().
     AddEntityFrameworkStores<ApplicationDbContext>();
+
+builder.Services.AddAuthentication().AddGoogle(googleOptions =>
+{
+    googleOptions.ClientId = builder.Configuration["Authentication:Google:ClientId"];
+    googleOptions.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+});
+
+builder.Services.AddAuthentication().AddFacebook(options =>
+{
+    options.AppId = "904276830670338";
+    options.AppSecret = "1f8d2f79da752abddf54dc064773b9e7";
+});
+
+builder.Services.AddTransient<IEmailSender, EmailSender>();   // EMAIL SENDER
+
+
+builder.Services.Configure<SettingsBrainTree>(builder.Configuration.GetSection("BrainTree"));
+builder.Services.AddSingleton<IBrainTreeBridge, BrainTreeBridge>();
+
+builder.Services.AddScoped<IRepositoryCategory, RepositoryCategory>();
+builder.Services.AddScoped<IRepositoryMyModel, RepositoryMyModel>();
+builder.Services.AddScoped<IRepositoryProduct, RepositoryProduct>();
+builder.Services.AddScoped<IRepositoryQueryHeader, RepositoryQueryHeader>();
+builder.Services.AddScoped<IRepositoryQueryDetail, RepositoryQueryDetail>();
+builder.Services.AddScoped<IRepositoryApplicationUser, RepositoryApplicationUser>();
+builder.Services.AddScoped<IRepositoryOrderHeader, RepositoryOrderHeader>();
+builder.Services.AddScoped<IRepositoryOrderDetail, RepositoryOrderDetail>();
 
 builder.Services.AddControllersWithViews();  // MVC
 
