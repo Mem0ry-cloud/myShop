@@ -14,61 +14,56 @@
 
 <form method="post" enctype="multipart/form-data">
 
-    <!-- Передача скрытых данных -->
     <input asp-for="Product.Id" hidden />
 
-    <p>
+    <div class="form-group">
         <label asp-for="Product.Name"></label>
         <input asp-for="Product.Name" class="form-control" />
         <span asp-validation-for="Product.Name" class="text-danger"></span>
-    </p>
+    </div>
 
-    <p>
+    <div class="form-group">
         <label asp-for="Product.Price"></label>
         <input asp-for="Product.Price" class="form-control" />
         <span asp-validation-for="Product.Price" class="text-danger"></span>
-    </p>
+    </div>
 
-    <p>
+    <div class="form-group">
         <label asp-for="Product.Description"></label>
-        <!--<input asp-for="Product.Description" class="form-control" />-->
         <textarea asp-for="Product.Description" class="form-control summernote"></textarea>
         <span asp-validation-for="Product.Description" class="text-danger"></span>
-    </p>
+    </div>
 
-    <p>
+    <div class="form-group">
         <label asp-for="Product.ShortDescription"></label>
         <input asp-for="Product.ShortDescription" class="form-control" />
         <span asp-validation-for="Product.ShortDescription" class="text-danger"></span>
-    </p>
+    </div>
 
-    <p>
+    <div class="form-group">
         <label asp-for="Product.Image"></label>
         <input type="file" name="files" class="form-control" id="uploadedImage" multiple />
-    </p>
+    </div>
 
-    <p>
+    <div class="form-group">
         <label asp-for="Product.CategoryId"></label>
-        <!--<select asp-for="CategoryId" asp-items="@ViewBag.CategoriesList" class="form-control">-->
-
         <select asp-for="Product.CategoryId" asp-items="@Model.CategoriesList"
                 class="form-control">
             <option disabled selected>-- Выберите категорию --</option>
         </select>
-
         <span asp-validation-for="Product.CategoryId" class="text-danger"></span>
-    </p>
+    </div>
 
-    <p>
+    <div class="form-group">
         <label asp-for="Product.MyModelId"></label>
         <select asp-for="Product.MyModelId" asp-items="@Model.MyModelList"
                 class="form-control">
             <option disabled selected>-- Выберите MyModel --</option>
         </select>
         <span asp-validation-for="Product.MyModelId" class="text-danger"></span>
-    </p>
+    </div>
 
-    <p>
+    <div class="form-group">
         @if (Model.Product.Id != 0)
         {
             <input type="submit" class="btn btn-success" value="Update" />
@@ -79,34 +74,30 @@
         }
 
         <a class="btn btn-primary" asp-controller="Category" asp-action="Index"> Back </a>
-    </p>
+    </div>
 
-    <p>
-        <div asp-validation-summary="All"></div>
-    </p>
+    <div asp-validation-summary="All"></div>
 </form>
 
 @if (Model.Product.Id != 0)
 {
-    <p>
-        <img src="@PathManager.ImageProductPath@Model.Product.Image" width="100" />
-    </p>
+    <div class="mb-3">
+        <img src="@PathManager.ImageProductPath@Model.Product.Image" width="100" class="img-thumbnail" />
+    </div>
 }
-
 
 @section Scripts {
     @{
         <partial name="_ValidationScriptsPartial" />
     }
 
-    <script>/* editor */
+    <script>
         $(document).ready(function () {
             $('.summernote').summernote({
                 height: 200
             });
         });
 
-        /* alert */
         function input() {
             if (document.getElementById("uploadedImage").value == "") {
                 Swal.fire(
@@ -117,5 +108,6 @@
                 return false;
             }
             return true;
-        }</script>
+        }
+    </script>
 }
